@@ -69,7 +69,7 @@ def process_contract_addresses(filename='contract_addresses.txt'):
         time.sleep(1)
 
 # Schedule the process to run every 70 seconds
-schedule.every(5).seconds.do(process_contract_addresses)
+schedule.every(70).seconds.do(process_contract_addresses)
 
 # Main function to start the process
 if __name__ == "__main__":
