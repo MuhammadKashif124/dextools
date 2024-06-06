@@ -13,7 +13,7 @@ CHAINS = {
     "BSC": 56,
 }
 
-def get_liquidity_pools(chain, sort, order, page=0, pageSize=5, api_key="LTDPU71YvP12mpmDZPTVF4p7aJmJTFjg20KkbWAt"):
+def get_liquidity_pools(chain, sort, order, page=0, pageSize=10, api_key="LTDPU71YvP12mpmDZPTVF4p7aJmJTFjg20KkbWAt"):
     api_url = f"https://public-api.dextools.io/trial/v2/pool/{chain}"
     
     headers = {
@@ -57,7 +57,7 @@ def update_contract_addresses():
     sort = "creationTime"
     order = "desc"
     page = 0
-    pageSize = 5
+    pageSize = 10
     dextools_api_key = "LTDPU71YvP12mpmDZPTVF4p7aJmJTFjg20KkbWAt"  # Replace with your actual API key
 
     pools_info = get_liquidity_pools(chain, sort, order, page, pageSize, dextools_api_key)
@@ -65,17 +65,18 @@ def update_contract_addresses():
         logging.error("No data found in DEXTools API response.")
         return
 
+    # Filter and collect main token addresses only
     addresses_to_save = [
-        pool['address']  # Extract the 'address' field correctly from the response
+        pool['mainToken']['address']  # Extract the 'mainToken' 'address' field correctly from the response
         for pool in pools_info['data']['results']
     ]
 
     save_contract_addresses_to_file(addresses_to_save)
 
-# Schedule the job every 5 minutes
-schedule.every(2).minutes.do(update_contract_addresses)
+# Schedule the job every 1 minute
+schedule.every(1).minutes.do(update_contract_addresses)
 
-logging.info("Scheduler started. Checking for new contracts every 5 minutes.")
+logging.info("Scheduler started. Checking for new contracts every 1 minute.")
 
 while True:
     schedule.run_pending()
