@@ -3,6 +3,7 @@ import time
 import requests
 import schedule
 from telethon.sync import TelegramClient
+from telethon.tl.functions.messages import SendMessageRequest
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -10,7 +11,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Telegram configuration
 api_id = '131966'
 api_hash = '80d2b7c1bbb40d216257b96a4ffa722e'
-phone_number = '+972526262123'
+bot_token = '7329414717:AAHcPkGEGouJY2-13MAbEKWATDkM77r0XpE'
+chat_id = '1207510563'  # Use the chat ID or username where you want to send notifications
 
 # Read contract addresses from a text file
 def read_contract_addresses(filename='contract_addresses.txt'):
@@ -31,14 +33,18 @@ def get_token_details(contract_address, api_key="fd6f3f446dbeb3aae4a6fc2f4983c7b
         logging.error(f"Failed to fetch data from TokenSniffer API for {contract_address}. Status code: {response.status_code}")
         return None
 
-# Send a Telegram notification using Telethon
+# Send a Telegram notification using bot
 def send_telegram_message(body):
-    with TelegramClient('session_name', api_id, api_hash) as client:
-        try:
-            client.send_message(phone_number, body)
-            logging.info(f"Telegram message sent successfully to {phone_number}")
-        except Exception as e:
-            logging.error(f"Failed to send Telegram message. Error: {str(e)}")
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    data = {
+        'chat_id': chat_id,
+        'text': body
+    }
+    try:
+        response = requests.post(url, data=data)
+        logging.info(f"Telegram message sent successfully to {chat_id}. Status: {response.status_code}")
+    except Exception as e:
+        logging.error(f"Failed to send Telegram message. Error: {str(e)}")
 
 # Process each contract address and check score
 def process_contract_addresses(filename='contract_addresses.txt'):
@@ -63,7 +69,7 @@ def process_contract_addresses(filename='contract_addresses.txt'):
         time.sleep(1)
 
 # Schedule the process to run every 70 seconds
-schedule.every(70).seconds.do(process_contract_addresses)
+schedule.every(5).seconds.do(process_contract_addresses)
 
 # Main function to start the process
 if __name__ == "__main__":
