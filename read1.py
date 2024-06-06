@@ -1,26 +1,16 @@
-import requests
 import logging
 import time
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
-from email.mime.application import MIMEApplication
-from email.utils import formatdate
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+import requests
 import schedule
+from telethon.sync import TelegramClient
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Email configuration
-EMAIL_ADDRESS = "m.kashif@tekrevol.com"
-EMAIL_PASSWORD = "Kashif@123#"
-RECIPIENT_EMAIL = "evenbetter6@gmail.com"
+# Telegram configuration
+api_id = '131966'
+api_hash = '80d2b7c1bbb40d216257b96a4ffa722e'
+phone_number = '+972526262123'
 
 # Read contract addresses from a text file
 def read_contract_addresses(filename='contract_addresses.txt'):
@@ -41,24 +31,14 @@ def get_token_details(contract_address, api_key="fd6f3f446dbeb3aae4a6fc2f4983c7b
         logging.error(f"Failed to fetch data from TokenSniffer API for {contract_address}. Status code: {response.status_code}")
         return None
 
-# Send an email notification
-def send_email(subject, body):
-    msg = MIMEMultipart()
-    msg['From'] = EMAIL_ADDRESS
-    msg['To'] = RECIPIENT_EMAIL
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
-
-    try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-        text = msg.as_string()
-        server.sendmail(EMAIL_ADDRESS, RECIPIENT_EMAIL, text)
-        server.quit()
-        logging.info(f"Email sent successfully to {RECIPIENT_EMAIL}")
-    except Exception as e:
-        logging.error(f"Failed to send email. Error: {str(e)}")
+# Send a Telegram notification using Telethon
+def send_telegram_message(body):
+    with TelegramClient('session_name', api_id, api_hash) as client:
+        try:
+            client.send_message(phone_number, body)
+            logging.info(f"Telegram message sent successfully to {phone_number}")
+        except Exception as e:
+            logging.error(f"Failed to send Telegram message. Error: {str(e)}")
 
 # Process each contract address and check score
 def process_contract_addresses(filename='contract_addresses.txt'):
@@ -73,7 +53,7 @@ def process_contract_addresses(filename='contract_addresses.txt'):
             if score > 49:
                 message = f"Contract address: {address}, Score: {score}"
                 print(message)
-                send_email("High Score Alert", message)
+                send_telegram_message(message)
             else:
                 logging.info(f"Contract address: {address} has a score of {score}, which is not greater than 49.")
         else:
@@ -82,7 +62,7 @@ def process_contract_addresses(filename='contract_addresses.txt'):
         # Sleep to avoid hitting API rate limits
         time.sleep(1)
 
-# Schedule the process to run every 120 seconds
+# Schedule the process to run every 70 seconds
 schedule.every(70).seconds.do(process_contract_addresses)
 
 # Main function to start the process
